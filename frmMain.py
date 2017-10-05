@@ -3,6 +3,8 @@ from addJob import addjob
 from utilities import *
 from wx.lib.printout import PrintTable
 
+from ConfigParser import SafeConfigParser
+
 ADD = wx.NewId()
 EDIT = wx.NewId()
 CLOSE = wx.NewId()
@@ -20,6 +22,8 @@ class frmMain(wx.Dialog):
         kwds["style"] = wx.RESIZE_BORDER
         wx.Dialog.__init__(self, parent, id, title, **kwds)
 
+        self.getconfig()
+
         self.lctsup = wx.ListCtrl(self, DISPLAY,
             style=wx.LC_REPORT | wx.LC_SINGLE_SEL, size=(1, 150))
 
@@ -28,11 +32,11 @@ class frmMain(wx.Dialog):
         self.lctsup.InsertColumn(2, 'Tanggal')
         self.lctsup.InsertColumn(3, 'Status')
 
-        self.butadd = wx.Button(self, ADD, "Add")
-        self.butedit = wx.Button(self, EDIT, "Edit")
-        self.butdelete = wx.Button(self, DELETE, "Delete")
-        self.butprint = wx.Button(self, PRINT, "Print")
-        self.butclose = wx.Button(self, CLOSE, "Close")
+        self.butadd = wx.Button(self, ADD, "&Add")
+        self.butedit = wx.Button(self, EDIT, "&Edit")
+        self.butdelete = wx.Button(self, DELETE, "&Delete")
+        self.butprint = wx.Button(self, PRINT, "&Print")
+        self.butclose = wx.Button(self, CLOSE, "&Close")
         self.refresh()
         self.__do_layout()
 
@@ -69,6 +73,20 @@ class frmMain(wx.Dialog):
     def close(self, event):
         self.Destroy()
 
+    def getconfig(self):
+        config = SafeConfigParser()
+        config.read('config.ini')
+
+        self.mesinID = config.get('Machine', 'ID')  # -> "value1"
+        self.mesinCode = config.get('Machine', 'Code')  # -> "value2"
+        self.mesinName =  config.get('Machine', 'Name')  # -> "value3"
+
+        # getfloat() raises an exception if the value is not a float
+        #a_float = config.getfloat('Machine', 'a_float')
+
+        # getint() and getboolean() also do this for their respective types
+        #an_int = config.getint('Machine', 'ID')
+
     def refresh(self):
         self.lctsup.DeleteAllItems()
         x = 0
@@ -81,8 +99,8 @@ class frmMain(wx.Dialog):
             x += 1
 
     def add(self, event):
-        ajob = addjob(self, -1, "Tambahkan Job Baru",
-                            False, 0)
+        ajob = addjob(self, -1, "Tambahkan Job Baru" + " [Mesin ID:" + self.mesinID + "]",
+                            False, 0, self.mesinID)
 
         val = ajob.ShowModal()
         if val:
@@ -140,7 +158,6 @@ class frmMain(wx.Dialog):
         prt.SetFooter("Page No", colour=wx.NamedColour('RED'), type="Num")
         prt.SetRowSpacing(10, 10)
         prt.Print()
-
 
 class app(wx.App):
     def OnInit(self):
