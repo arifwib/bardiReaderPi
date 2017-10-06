@@ -1,9 +1,18 @@
 import psycopg2
 import psycopg2.extras
+from ConfigParser import SafeConfigParser
 
 def dbi():
-    dbi = psycopg2.connect("dbname=pswjl host=localhost\
-    user=postgres password=masterkey")
+    config = SafeConfigParser()
+    config.read('config.ini')
+
+    host = config.get('DB', 'host')
+    dbname = config.get('DB', 'dbname')
+    user =  config.get('DB', 'user')
+    password = config.get('DB', 'password')
+
+    dbi = psycopg2.connect("dbname="+dbname+' host='+host+'\
+    user='+user+' password='+password+'key')
     return dbi
 
 
@@ -35,7 +44,7 @@ def duplicedit(nosalesorder,jobdate,id,msg,ok):
 def getjobparms(id):
     db = dbi()
     cur = db.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("select * from jobs where id = %s" %(id))
+    cur.execute("select * from tjobmachinereader where id = %s" %(id))
     k = cur.fetchone() #cur.dictfetchone()
     return k
 
@@ -85,17 +94,26 @@ def deletejob(id):
 def updatejob(parms,id):
     con = dbi()
     c = con.cursor()
-    c.execute("update jobs \
-    set jobdate='%s', nosalesorder='%s', jenisjob='%s',statusjob='%s'\
+    c.execute("update tjobmachinereader \
+    set jobdate='%s', nosalesorder='%s', jenisjob='%s',statusjob='%s',\
+    makereadytime='%s', makereadyoutput=%s, productivetime='%s',productiveoutput=%s,\
+    finishtime='%s', finishoutput=%s\
      where id = %s"
-    % (parms['jobdate'],parms['nosalesorder'],parms['jenisjob'],
-    parms['statusjob'],id))
+    % (parms['jobdate'],parms['nosalesorder'],parms['jenisjob'], parms['statusjob'],\
+       parms['makereadytime'], parms['makereadyoutput'], parms['productivetime'],\
+       parms['productiveoutput'], parms['finishtime'], parms['finishoutput'],\
+       id))
     con.commit()
 
 def enterjob(parms):
     con = dbi()
     c = con.cursor()
-    c.execute("insert into jobs(nosalesorder,jobdate,statusjob,jenisjob)\
-       values ('%s', '%s', '%s', '%s')" % (parms['nosalesorder'],
-       parms['jobdate'],parms['statusjob'],parms['jenisjob']))
+    c.execute("insert into tjobmachinereader(nosalesorder,machine_id,jobdate,statusjob,jenisjob,\
+              makereadytime, makereadyoutput, productivetime, productiveoutput, finishtime, finishoutput\
+              ) values ('%s', %s, '%s', '%s', '%s', '%s', %s, '%s', %s, '%s', %s)"
+              % (parms['nosalesorder'], parms['machine_id'],
+                parms['jobdate'],parms['statusjob'],parms['jenisjob'],
+                parms['makereadytime'],parms['makereadyoutput'],parms['productivetime'],
+                parms['productiveoutput'], parms['finishtime'], parms['finishoutput'])
+        )
     con.commit()

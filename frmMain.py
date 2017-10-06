@@ -42,6 +42,7 @@ class frmMain(wx.Dialog):
 
     def __do_layout(self):
 
+        #boxa set for border
         boxa = wx.BoxSizer(wx.VERTICAL)
         boxt = wx.BoxSizer(wx.VERTICAL)
         boxb = wx.BoxSizer(wx.HORIZONTAL)
@@ -110,7 +111,7 @@ class frmMain(wx.Dialog):
     def edit(self, event):
         if self.idu:
             ajob = addjob(self, -1, "Edit Job",
-                                True, self.idu)
+                                True, self.idu, self.mesinID)
             val = ajob.ShowModal()
             if val:
                 self.refresh()

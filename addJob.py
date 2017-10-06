@@ -56,14 +56,20 @@ class addjob(wx.Dialog):
         self.makereadytime = wx.adv.TimePickerCtrl(self, -1)
         self.makereadytime.Disable()
         self.labmakereadyoutput = wx.StaticText(self, -1, "Counter makeready:   ")
-        self.makereadyoutput = wx.TextCtrl(self, -1, '0',
+        sTemp = str(self.parms['makereadyoutput'])
+        if sTemp == '':
+            sTemp = '0'
+        self.makereadyoutput = wx.TextCtrl(self, -1, sTemp,
                                            style=wx.TE_RIGHT, size=(180, -1), pos=(10, 10))
 
         self.labproductivetime = wx.StaticText(self, -1, "productivetime:")
         self.productivetime = wx.adv.TimePickerCtrl(self, -1)
         self.productivetime.Disable()
         self.labproductiveoutput = wx.StaticText(self, -1, "Hasil Produktif:")
-        self.productiveoutput = wx.TextCtrl(self, -1, self.parms['productiveoutput'],
+        sTemp = str(self.parms['productiveoutput'])
+        if sTemp == '':
+            sTemp = '0'
+        self.productiveoutput = wx.TextCtrl(self, -1, sTemp,
                                             style=wx.TE_RIGHT, size=(180, -1), pos=(10, 10))
 
         self.labfinishtime = wx.StaticText(self, -1, "Waktu Selesai:")
@@ -92,8 +98,6 @@ class addjob(wx.Dialog):
         boxl.Add(self.machine_id, row=3, col=3)
         boxl.Add(self.labjobdate, row=3, col=1)
         boxl.Add(self.jobdate, row=3, col=2)
-        boxl.Add(self.labstatusjob, row=4, col=1)
-        boxl.Add(self.statusjob, row=4, col=2)
 
         box2 = RowColSizer()
         box2.Add(self.labmakereadyoutput, row=1, col=1)
@@ -104,11 +108,13 @@ class addjob(wx.Dialog):
         box2.Add(self.productivetime, row=2, col=3)
         box2.Add(self.labfinishtime, row=3, col=1)
         box2.Add(self.finishtime, row=3, col=2)
+        box2.Add(self.labstatusjob, row=3, col=3)
+        box2.Add(self.statusjob, row=3, col=4)
 
         self.labmakereadytime.Hide()
         self.labproductivetime.Hide()
 
-        boxl.Add(box2, row=5, col=1, colspan=2)
+        boxl.Add(box2, row=4, col=1, colspan=2)
 
         boxb = wx.BoxSizer(wx.HORIZONTAL)
         boxb.Add(self.butsave, 0,
@@ -164,18 +170,28 @@ class addjob(wx.Dialog):
     def add(self, event):
         ok = True
         msg = ''
+        msgData = ''
         parms = self.parms
         parms['statusjob'] = self.statusjob.GetValue().strip()
         # strip to get rid of leading and trailing spaces
         parms['nosalesorder'] = self.nosalesorder.GetValue()
-        parms['statusjob'] = self.statusjob.GetValue()
-        parms['jenisjob'] = self.Salute.GetStringSelection()
+        parms['statusjob'] = self.statusjob.GetCurrentSelection()
+        parms['jenisjob'] = self.Salute.GetSelection()
         parms['jobdate'] = self.jobdate.GetValue()
+
+        parms['machine_id'] = self.machine_id.GetValue()
+        parms['makereadytime'] = self.makereadytime.GetValue()
+        parms['makereadyoutput'] = self.makereadyoutput.GetValue()
+        parms['productivetime'] = self.productivetime.GetValue()
+        parms['productiveoutput'] = self.productiveoutput.GetValue()
+        parms['finishtime'] = self.finishtime.GetValue()
+        parms['finishoutput'] = self.productiveoutput.GetValue()
         # check that all fields are filled
         for k, v in parms.items():
             if v == '':
                 msg += "Isilah data '%s'." % (k.capitalize())
                 ok = False
+            msgData += "'%s' = %s\n" % (k.capitalize(), v)
         # if edit mode
         if self.edit:
             # check for duplicates
@@ -191,6 +207,9 @@ class addjob(wx.Dialog):
                 error.Destroy()
                 # if add mode
         else:
+            infodata = wx.MessageDialog(self, msgData, 'Data', wx.OK)
+            infodata.ShowModal()
+            infodata.Destroy()
             msg, ok = duplic(parms['nosalesorder'], parms['jobdate'], msg, ok)
             if ok:
                 enterjob(parms)  # external program
